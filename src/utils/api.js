@@ -39,7 +39,9 @@ const getGameRating = (metacritic, rating) => {
   if (metacritic >= 80 || rating >= 4.5) return 'A';
   if (metacritic >= 70 || rating >= 3.5) return 'B';
   if (metacritic >= 60 || rating >= 2.5) return 'C';
-  return 'D';
+  if (metacritic >= 50 || rating >= 1.5) return 'E';
+  if (metacritic >= 40 || rating >= 1.0) return 'D';
+  return 'F';
 };
 
 export const getGamesByPlatform = async (platformName, page = 1) => {
