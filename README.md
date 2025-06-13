@@ -1,3 +1,79 @@
+# 🎮 Extremen Gaming - PlayStation Discovery Queue
+
+This is a React application that mimics the Steam Discovery Queue for PlayStation games (PS1, PS2, PS3, and Vita), using **100% live data** from the RAWG Video Games Database API.
+
+## Setup Instructions (for Windows with PowerShell)
+
+1.  **Clone the repository:**
+    ```powershell
+    git clone <repository-url>
+    cd ps3queue
+    ```
+
+2.  **Install dependencies:**
+    ```powershell
+    npm install
+    ```
+
+3.  **Set up your RAWG API Key:**
+    -   Visit [RAWG API Documentation](https://rawg.io/apidocs) and click "Get API Key"
+    -   Sign up for a free account (no credit card required)
+    -   Copy your API key from the dashboard
+    -   Create a new file named `.env` in the root of the project
+    -   Add the following line to the `.env` file, replacing `YOUR_API_KEY_HERE` with your actual API key:
+        ```
+        REACT_APP_RAWG_KEY=YOUR_API_KEY_HERE
+        ```
+
+4.  **Run the application:**
+    ```powershell
+    npm start
+    ```
+    This will start the development server and open the application in your default browser at `http://localhost:3000`.
+
+## Features
+-   **Pure API Experience**: 100% live data from RAWG's 500,000+ game database (no JSON fallbacks)
+-   **Multi-Platform Support**: PlayStation 1, PlayStation 2, PlayStation 3, and PlayStation Vita
+-   **Smart Recommendations**: Advanced AI-powered recommendation engine that learns from your preferences
+-   **Tinder-style Interface**: Swipe through games with smooth animations
+-   **Comprehensive Game Info**: Real-time game data with screenshots, genres, platform, release date, developer, and descriptions
+-   **Wishlist System**: Save games you're interested in with persistent storage
+-   **Behavioral Learning**: The system learns from your "Hell nah", "Add to wishlist", and "Next game" interactions
+-   **Intelligent Caching**: 10-minute cache system to optimize API usage
+-   **Enhanced Error Handling**: Clear setup instructions when API key is missing
+
+## How It Works
+1. **Choose Your Platforms**: Select from PlayStation 1, PlayStation 2, PlayStation 3, and PlayStation Vita
+2. **Start the Queue**: Begin discovering games tailored to your preferences from RAWG's live database
+3. **Rate Games**: Use the three action buttons:
+   - **"Hell nah"**: Reject games you don't like (teaches the system your dislikes)
+   - **"Add to wishlist"**: Save games you're interested in (teaches the system your likes)
+   - **"Next game"**: Skip without rating (neutral action)
+4. **Get Better Recommendations**: The AI learns from your behavior and improves suggestions over time
+
+## Tech Stack
+-   **Frontend**: React with Hooks and Context API
+-   **Styling**: Tailwind CSS with custom color scheme
+-   **Animations**: Framer Motion for smooth transitions
+-   **API**: RAWG Video Games Database API
+-   **HTTP Client**: Axios
+-   **State Management**: React Context with localStorage persistence
+-   **Recommendation Engine**: Custom content-based filtering with behavioral modeling
+
+## API Information
+This app uses the [RAWG Video Games Database API](https://rawg.io/apidocs), which provides:
+- 500,000+ games database
+- High-quality screenshots and artwork
+- Comprehensive game metadata
+- Free tier with 20,000 requests per month
+- No credit card required for signup
+
+## Troubleshooting
+- **"RAWG API key missing" error**: Make sure you've created a `.env` file with your API key
+- **Games not loading**: Check your internet connection and API key validity
+- **Slow loading**: The app fetches real data from RAWG API, initial load may take a few seconds
+- **No games showing**: Try resetting your data using the "Reset Data" button
+
 # Getting Started with Create React App
 
 This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
