@@ -70,12 +70,15 @@ const GameCard = ({ game }) => {
             {rating && (
               <div className="flex items-center">
                 <span className="text-gray-300 mr-2">Rating:</span>
-                <div className={`w-10 h-10 rounded-full flex items-center justify-center text-black font-bold text-lg ${
-                  rating === 'S' ? 'bg-yellow-400' :
-                  rating === 'A' ? 'bg-green-400' :
-                  rating === 'B' ? 'bg-blue-400' :
-                  rating === 'C' ? 'bg-orange-400' :
-                  'bg-red-400'
+                <div className={`w-10 h-10 rounded-lg flex items-center justify-center font-bold text-lg ${
+                  rating === 'S' ? 'bg-purple-700 text-white' :
+                  rating === 'A' ? 'bg-green-600 text-white' :
+                  rating === 'B' ? 'bg-yellow-500 text-black' :
+                  rating === 'C' ? 'bg-orange-600 text-white' :
+                  rating === 'D' ? 'bg-red-600 text-white' :
+                  rating === 'E' ? 'bg-red-800 text-white' :
+                  rating === 'F' ? 'bg-gray-900 text-white' :
+                  'bg-blue-400'
                 }`}>
                   {rating}
                 </div>
