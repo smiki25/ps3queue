@@ -126,12 +126,15 @@ const WishlistModal = ({ isOpen, onClose }) => {
                       </div>
 
                       {game.rating && (
-                        <div className={`w-8 h-8 rounded-full flex items-center justify-center text-black font-bold text-sm mr-4 ${
-                          game.rating === 'S' ? 'bg-yellow-400' :
-                          game.rating === 'A' ? 'bg-green-400' :
-                          game.rating === 'B' ? 'bg-blue-400' :
-                          game.rating === 'C' ? 'bg-orange-400' :
-                          'bg-red-400'
+                        <div className={`w-10 h-10 rounded-lg flex items-center justify-center font-bold text-lg ${
+                          game.rating === 'S' ? 'bg-purple-700 text-white' :
+                          game.rating === 'A' ? 'bg-green-600 text-white' :
+                          game.rating === 'B' ? 'bg-yellow-500 text-black' :
+                          game.rating === 'C' ? 'bg-orange-600 text-white' :
+                          game.rating === 'D' ? 'bg-red-600 text-white' :
+                          game.rating === 'E' ? 'bg-red-800 text-white' :
+                          game.rating === 'F' ? 'bg-gray-900 text-white' :
+                          'bg-blue-400'
                         }`}>
                           {game.rating}
                         </div>
