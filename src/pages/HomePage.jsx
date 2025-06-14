@@ -45,16 +45,16 @@ const HomePage = () => {
             transition={{ duration: 1, delay: 0.2 }}
             className="text-7xl font-voltaire font-black text-white mb-4 tracking-wider transform scale-x-110"
           >
-            FIND THE
+            EXTREMEN GAMING
           </motion.h1>
           
           <motion.h2 
             initial={{ opacity: 0, scale: 0.8 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 1, delay: 0.4 }}
-            className="text-6xl font-voltaire font-black text-[#480e0e] mb-8 tracking-widest transform scale-x-125"
+            className="text-6xl font-voltaire font-black text-white mb-8 tracking-widest transform scale-x-125"
           >
-            EXTREME GAMES
+            QUEUE
           </motion.h2>
 
           <motion.p 
@@ -63,7 +63,7 @@ const HomePage = () => {
             transition={{ duration: 0.8, delay: 0.6 }}
             className="text-2xl text-gray-300 font-voltaire mb-12 leading-relaxed"
           >
-            Steam queue for the PS2, PS3
+            Extreme queue for the PS2, PS3
           </motion.p>
 
           <motion.div 
