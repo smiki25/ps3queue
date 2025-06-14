@@ -52,7 +52,7 @@ const HomePage = () => {
             initial={{ opacity: 0, scale: 0.8 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 1, delay: 0.4 }}
-            className="text-2xl sm:text-3xl md:text-5xl lg:text-6xl font-voltaire font-black text-[#480e0e] mb-4 sm:mb-6 md:mb-8 tracking-widest transform scale-x-125"
+            className="text-2xl sm:text-3xl md:text-5xl lg:text-6xl font-voltaire font-black text-white mb-4 sm:mb-6 md:mb-8 tracking-widest transform scale-x-125"
           >
             QUEUE
           </motion.h2>

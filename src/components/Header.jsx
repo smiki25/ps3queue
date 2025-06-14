@@ -7,7 +7,7 @@ const Header = ({ onWishlistClick }) => {
   return (
     <header className="h-16 bg-[#480e0e] text-white flex items-center justify-between px-3 sm:px-4 md:px-6">
       <h1
-        className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-voltaire font-black tracking-wide sm:tracking-wider transform scale-x-105 sm:scale-x-110 cursor-pointer hover:text-gray-200 transition-colors flex-shrink min-w-0 leading-none"
+        className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-voltaire font-black tracking-wide sm:tracking-wider transform scale-x-105 sm:scale-x-110 cursor-pointer hover:text-[#FF5B5B] hover:scale-x-115 transition-all duration-300 flex-shrink min-w-0 leading-none"
         onClick={() => navigate('/')}
       >
         EXTREMEN GAMING
