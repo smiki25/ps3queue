@@ -7,6 +7,19 @@ const WishlistModal = ({ isOpen, onClose }) => {
   const { wishlist, removeFromWishlist, getGameById } = useGame();
   const [wishlistGames, setWishlistGames] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
+
+  // Check screen size on mount and resize
+  useEffect(() => {
+    const checkScreenSize = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+    
+    checkScreenSize();
+    window.addEventListener('resize', checkScreenSize);
+    
+    return () => window.removeEventListener('resize', checkScreenSize);
+  }, []);
 
   useEffect(() => {
     const loadWishlistGames = async () => {
@@ -60,42 +73,44 @@ const WishlistModal = ({ isOpen, onClose }) => {
             animate={{ scale: 1, opacity: 1 }}
             exit={{ scale: 0.9, opacity: 0 }}
             transition={{ type: 'spring', stiffness: 300, damping: 25 }}
-            className="bg-[#2b2b2b] w-full max-w-4xl max-h-[80vh] rounded-lg overflow-hidden"
+            className="bg-[#2b2b2b] w-full max-w-4xl max-h-[90vh] md:max-h-[80vh] rounded-lg overflow-hidden"
             onClick={e => e.stopPropagation()}
           >
-            <div className="bg-[#480e0e] p-6 flex justify-between items-center">
-              <h2 className="text-4xl font-voltaire font-black tracking-wider transform scale-x-110 text-white">WISHLIST</h2>
+            <div className="bg-[#480e0e] p-4 md:p-6 flex justify-between items-center">
+              <h2 className="text-2xl md:text-3xl lg:text-4xl font-voltaire font-black tracking-wider transform scale-x-110 text-white">
+                WISHLIST
+              </h2>
               <button
                 onClick={onClose}
-                className="text-white hover:text-gray-300 transition-colors"
+                className="text-white hover:text-gray-300 active:text-gray-300 transition-colors touch-manipulation p-1"
               >
-                <XMarkIcon className="h-8 w-8" />
+                <XMarkIcon className="h-6 w-6 md:h-8 md:w-8" />
               </button>
             </div>
 
-            <div className="p-6">
+            <div className="p-4 md:p-6">
               {loading ? (
-                <div className="text-center py-12">
+                <div className="text-center py-8 md:py-12">
                   <div className="w-8 h-8 border-2 border-t-white border-gray-600 rounded-full animate-spin mx-auto mb-4"></div>
-                  <p className="text-gray-400 font-voltaire">Loading wishlist...</p>
+                  <p className="text-gray-400 font-voltaire text-sm md:text-base">Loading wishlist...</p>
                 </div>
               ) : wishlistGames.length === 0 ? (
-                <div className="text-center py-12">
-                  <p className="text-xl text-gray-400 font-voltaire">
+                <div className="text-center py-8 md:py-12">
+                  <p className="text-lg md:text-xl text-gray-400 font-voltaire">
                     Your wishlist is empty
                   </p>
-                  <p className="text-gray-500 mt-2">
+                  <p className="text-gray-500 mt-2 text-sm md:text-base">
                     Add games to your wishlist while browsing the queue
                   </p>
                 </div>
               ) : (
-                <div className="space-y-4 max-h-[50vh] overflow-y-auto">
+                <div className="space-y-3 md:space-y-4 max-h-[60vh] md:max-h-[50vh] overflow-y-auto">
                   {wishlistGames.map(game => (
                     <div
                       key={game.id}
-                      className="flex items-center bg-[#1a1a1a] p-4 rounded-lg"
+                      className="flex items-center bg-[#1a1a1a] p-3 md:p-4 rounded-lg"
                     >
-                      <div className="w-20 h-28 flex-shrink-0 mr-4">
+                      <div className="w-16 h-20 md:w-20 md:h-28 flex-shrink-0 mr-3 md:mr-4">
                         <img
                           src={game.images?.[0] || '/placeholder-game.jpg'}
                           alt={game.title}
@@ -106,15 +121,15 @@ const WishlistModal = ({ isOpen, onClose }) => {
                         />
                       </div>
 
-                      <div className="flex-1 text-white">
-                        <h3 className="text-xl font-voltaire font-bold mb-1">
+                      <div className="flex-1 text-white min-w-0">
+                        <h3 className="text-base md:text-lg lg:text-xl font-voltaire font-bold mb-1 truncate">
                           {game.title}
                         </h3>
-                        <p className="text-gray-400 mb-2">
+                        <p className="text-gray-400 mb-2 text-xs md:text-sm">
                           {game.platform} • {game.releaseDate}
                         </p>
                         <div className="flex flex-wrap gap-1">
-                          {game.genres?.slice(0, 3).map((genre, index) => (
+                          {game.genres?.slice(0, isMobile ? 2 : 3).map((genre, index) => (
                             <span
                               key={index}
                               className="px-2 py-1 bg-[#480e0e] text-xs rounded"
@@ -126,7 +141,7 @@ const WishlistModal = ({ isOpen, onClose }) => {
                       </div>
 
                       {game.rating && (
-                        <div className={`w-8 h-8 rounded-full flex items-center justify-center text-black font-bold text-sm mr-4 ${
+                        <div className={`w-6 h-6 md:w-8 md:h-8 rounded-full flex items-center justify-center text-black font-bold text-xs md:text-sm mr-2 md:mr-4 flex-shrink-0 ${
                           game.rating === 'S' ? 'bg-yellow-400' :
                           game.rating === 'A' ? 'bg-green-400' :
                           game.rating === 'B' ? 'bg-blue-400' :
@@ -139,10 +154,10 @@ const WishlistModal = ({ isOpen, onClose }) => {
 
                       <button
                         onClick={() => handleRemoveFromWishlist(game.id)}
-                        className="text-red-400 hover:text-red-300 transition-colors"
+                        className="text-red-400 hover:text-red-300 active:text-red-300 transition-colors touch-manipulation p-1 flex-shrink-0"
                         title="Remove from wishlist"
                       >
-                        <XMarkIcon className="h-6 w-6" />
+                        <XMarkIcon className="h-5 w-5 md:h-6 md:w-6" />
                       </button>
                     </div>
                   ))}

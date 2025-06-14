@@ -1,8 +1,67 @@
-import { getGamesByMultiplePlatforms, hasRawgKey } from './api';
+import { getGamesByMultiplePlatforms, hasRawgKey, getSuggested } from './api';
 
+// Enhanced caching system
 let gameCache = new Map();
 let cacheTimestamp = null;
-const CACHE_DURATION = 10 * 60 * 1000;
+const CACHE_DURATION = 24 * 60 * 60 * 1000; // 24 hours instead of 10 minutes
+const STORAGE_KEY = 'ps3queue_game_cache';
+const STORAGE_TIMESTAMP_KEY = 'ps3queue_cache_timestamp';
+
+// Cache for collaborative filtering suggestions
+let collaborativeCache = new Map();
+const COLLABORATIVE_CACHE_KEY = 'ps3queue_collaborative_cache';
+
+// Load cache from localStorage on startup
+function loadCacheFromStorage() {
+  try {
+    const storedCache = localStorage.getItem(STORAGE_KEY);
+    const storedTimestamp = localStorage.getItem(STORAGE_TIMESTAMP_KEY);
+    
+    if (storedCache && storedTimestamp) {
+      const timestamp = parseInt(storedTimestamp);
+      const now = Date.now();
+      
+      // Check if cache is still valid (24 hours)
+      if (now - timestamp < CACHE_DURATION) {
+        const cacheData = JSON.parse(storedCache);
+        gameCache = new Map(Object.entries(cacheData));
+        cacheTimestamp = timestamp;
+        console.log('Loaded game cache from localStorage');
+        
+        // Load collaborative cache
+        const collaborativeData = localStorage.getItem(COLLABORATIVE_CACHE_KEY);
+        if (collaborativeData) {
+          collaborativeCache = new Map(Object.entries(JSON.parse(collaborativeData)));
+          console.log('Loaded collaborative filtering cache');
+        }
+        
+        return true;
+      }
+    }
+  } catch (error) {
+    console.warn('Failed to load cache from storage:', error);
+  }
+  return false;
+}
+
+// Save cache to localStorage
+function saveCacheToStorage() {
+  try {
+    const cacheObject = Object.fromEntries(gameCache);
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(cacheObject));
+    localStorage.setItem(STORAGE_TIMESTAMP_KEY, cacheTimestamp.toString());
+    
+    // Save collaborative cache
+    const collaborativeObject = Object.fromEntries(collaborativeCache);
+    localStorage.setItem(COLLABORATIVE_CACHE_KEY, JSON.stringify(collaborativeObject));
+  } catch (error) {
+    console.warn('Failed to save cache to storage:', error);
+  }
+}
+
+// Initialize cache from storage
+loadCacheFromStorage();
+
 export function computeContentSimilarity(gameA, gameB) {
   const featuresA = new Set([...gameA.genres, ...gameA.tags]);
   const featuresB = new Set([...gameB.genres, ...gameB.tags]);
@@ -11,6 +70,57 @@ export function computeContentSimilarity(gameA, gameB) {
   const union = new Set([...featuresA, ...featuresB]);
 
   return intersection.size / union.size;
+}
+
+// Enhanced collaborative filtering function
+export async function getCollaborativeRecommendations(likedGameIds, allGames) {
+  if (likedGameIds.length === 0) return [];
+  
+  const recommendations = new Map();
+  
+  for (const gameId of likedGameIds) {
+    // Check cache first
+    if (collaborativeCache.has(gameId)) {
+      const cachedSuggestions = collaborativeCache.get(gameId);
+      cachedSuggestions.forEach(suggestion => {
+        const current = recommendations.get(suggestion.id) || { ...suggestion, score: 0 };
+        current.score += 1; // Weight by number of liked games that suggest this
+        recommendations.set(suggestion.id, current);
+      });
+      continue;
+    }
+    
+    // Fetch suggestions from API
+    try {
+      const suggestions = await getSuggested(gameId);
+      
+      // Filter to only PS2/PS3 games and hidden gems (lower rating/less known)
+      const filteredSuggestions = suggestions.filter(game => {
+        const platform = game.platform || '';
+        const isPS2PS3 = platform.includes('PlayStation 2') || platform.includes('PlayStation 3');
+        const isHiddenGem = !game.rating || game.rating < 4.0; // Focus on lesser-known games
+        return isPS2PS3 && isHiddenGem;
+      });
+      
+      // Cache the suggestions
+      collaborativeCache.set(gameId, filteredSuggestions);
+      
+      // Add to recommendations
+      filteredSuggestions.forEach(suggestion => {
+        const current = recommendations.get(suggestion.id) || { ...suggestion, score: 0 };
+        current.score += 1;
+        recommendations.set(suggestion.id, current);
+      });
+      
+    } catch (error) {
+      console.error(`Failed to get suggestions for game ${gameId}:`, error);
+    }
+  }
+  
+  // Convert to array and sort by collaborative score
+  return Array.from(recommendations.values())
+    .sort((a, b) => b.score - a.score)
+    .slice(0, 20); // Return top 20 collaborative recommendations
 }
 
 export function updatePreferenceVector(action, game, currentVector = {}) {
@@ -39,11 +149,13 @@ export function updatePreferenceVector(action, game, currentVector = {}) {
   return newVector;
 }
 
-export function getGameScore(game, preferenceVector = {}, likedGames = []) {
+export function getGameScore(game, preferenceVector = {}, likedGames = [], collaborativeRecommendations = []) {
   let affinity = 0;
   let contentSimilarity = 0;
   let developerAffinity = 0;
   let platformAffinity = 0;
+  let collaborativeScore = 0;
+  let hiddenGemBonus = 0;
 
   for (const tag of [...game.genres, ...game.tags]) {
     affinity += (preferenceVector[tag] || 0);
@@ -56,6 +168,7 @@ export function getGameScore(game, preferenceVector = {}, likedGames = []) {
   if (game.platform) {
     platformAffinity = preferenceVector[`platform_${game.platform}`] || 0;
   }
+  
   if (likedGames.length > 0) {
     const similarities = likedGames.map(likedGame => 
       computeContentSimilarity(game, likedGame)
@@ -63,38 +176,60 @@ export function getGameScore(game, preferenceVector = {}, likedGames = []) {
     contentSimilarity = Math.max(...similarities);
   }
 
-  const explorationNoise = Math.random() * 0.3;
-  const currentYear = new Date().getFullYear();
+  // Collaborative filtering score
+  const collaborativeMatch = collaborativeRecommendations.find(rec => rec.id === game.id);
+  if (collaborativeMatch) {
+    collaborativeScore = collaborativeMatch.score * 0.4; // Strong weight for collaborative filtering
+  }
+
+  // Hidden gem bonus - favor lesser-known games
+  const rating = parseFloat(game.rating) || 0;
+  if (rating > 0 && rating < 4.0) {
+    hiddenGemBonus = (4.0 - rating) * 0.2; // Higher bonus for lower-rated (potentially hidden) gems
+  }
+
+  // Bonus for older games (PS2/PS3 era focus)
   const gameYear = parseInt(game.releaseDate) || 2000;
-  const recencyBonus = Math.max(0, (gameYear - 1990) / (currentYear - 1990)) * 0.1;
+  const eraBonus = (gameYear >= 2000 && gameYear <= 2013) ? 0.3 : 0;
+
+  const explorationNoise = Math.random() * 0.2; // Reduced to give more weight to other factors
 
   const finalScore =
-    contentSimilarity * 0.3 +
-    affinity * 0.2 +
-    developerAffinity * 0.1 +
-    platformAffinity * 0.05 +
-    recencyBonus * 0.05 +
-    explorationNoise * 0.3;
+    collaborativeScore * 0.35 +        // Collaborative filtering (most important for discovery)
+    contentSimilarity * 0.25 +         // Content similarity
+    affinity * 0.15 +                  // User preferences
+    hiddenGemBonus * 0.1 +             // Hidden gem bonus
+    eraBonus * 0.05 +                  // Era bonus
+    developerAffinity * 0.05 +         // Developer affinity
+    platformAffinity * 0.03 +          // Platform affinity
+    explorationNoise * 0.02;           // Small randomization
 
   return Math.max(0, finalScore);
 }
 
-async function fetchGamesData(selectedPlatforms) {
+// Enhanced incremental fetching system
+async function fetchGamesData(selectedPlatforms, forceRefresh = false) {
   const cacheKey = selectedPlatforms.sort().join(',');
   const now = Date.now();
 
-  if (gameCache.has(cacheKey) && cacheTimestamp && (now - cacheTimestamp < CACHE_DURATION)) {
+  // Check if we have valid cached data
+  if (!forceRefresh && gameCache.has(cacheKey) && cacheTimestamp && (now - cacheTimestamp < CACHE_DURATION)) {
     console.log('Using cached game data');
     return gameCache.get(cacheKey);
   }
+
   if (!hasRawgKey) {
     throw new Error('RAWG API key is required. Please add REACT_APP_RAWG_KEY to your .env file. Get your free API key from https://rawg.io/apidocs');
   }
 
   try {
     console.log('Fetching games from RAWG API...');
+    
+    // Start with fewer pages initially, expand as needed
+    const initialPages = 3; // Reduced from 5 to 3
     const promises = [];
-    for (let page = 1; page <= 5; page++) {
+    
+    for (let page = 1; page <= initialPages; page++) {
       promises.push(getGamesByMultiplePlatforms(selectedPlatforms, page));
     }
 
@@ -113,14 +248,57 @@ async function fetchGamesData(selectedPlatforms) {
 
     gameCache.set(cacheKey, uniqueGames);
     cacheTimestamp = now;
+    
+    // Save to localStorage
+    saveCacheToStorage();
 
     return uniqueGames;
   } catch (error) {
     console.error('Failed to fetch games from RAWG API:', error);
     
-    gameCache.delete(cacheKey);
+    // Don't clear cache on error, use stale data if available
+    if (gameCache.has(cacheKey)) {
+      console.log('Using stale cached data due to API error');
+      return gameCache.get(cacheKey);
+    }
     
     throw error;
+  }
+}
+
+// Add function to expand cache when needed
+export async function expandGameCache(selectedPlatforms, currentGameCount) {
+  const cacheKey = selectedPlatforms.sort().join(',');
+  const cached = gameCache.get(cacheKey) || [];
+  
+  // Only fetch more if we're running low on games
+  if (cached.length - currentGameCount > 20) {
+    return cached; // We have enough games
+  }
+  
+  try {
+    console.log('Expanding game cache...');
+    const nextPages = [4, 5]; // Fetch additional pages
+    const promises = nextPages.map(page => 
+      getGamesByMultiplePlatforms(selectedPlatforms, page)
+    );
+    
+    const results = await Promise.all(promises);
+    const newGames = results.flat();
+    
+    const allGames = [...cached, ...newGames];
+    const uniqueGames = allGames.filter((game, index, self) => 
+      index === self.findIndex(g => g.id === game.id)
+    );
+    
+    gameCache.set(cacheKey, uniqueGames);
+    saveCacheToStorage();
+    
+    console.log(`Expanded cache to ${uniqueGames.length} games`);
+    return uniqueGames;
+  } catch (error) {
+    console.error('Failed to expand cache:', error);
+    return cached; // Return existing cache on error
   }
 }
 
@@ -138,17 +316,28 @@ export async function getFilteredQueue(selectedPlatforms, userState = {}) {
     !seenGameIds.has(game.id) &&
     !rejectedGameIds.has(game.id)
   );
+  
   if (Object.keys(preferenceVector).length > 0 || likedGames.length > 0) {
     const likedGameObjects = likedGames.map(id => 
       allGames.find(g => g.id === id)
     ).filter(Boolean);
 
+    // Get collaborative recommendations for hidden gem discovery
+    const collaborativeRecommendations = await getCollaborativeRecommendations(likedGames, allGames);
+    console.log(`Found ${collaborativeRecommendations.length} collaborative recommendations`);
+
     availableGames = availableGames.map(game => ({
       ...game,
-      score: getGameScore(game, preferenceVector, likedGameObjects)
+      score: getGameScore(game, preferenceVector, likedGameObjects, collaborativeRecommendations)
     })).sort((a, b) => b.score - a.score);
   } else {
-    availableGames = availableGames.sort(() => Math.random() - 0.5);
+    // For new users, prioritize hidden gems and lesser-known titles
+    availableGames = availableGames
+      .map(game => ({
+        ...game,
+        score: getGameScore(game, {}, [], [])
+      }))
+      .sort((a, b) => b.score - a.score);
   }
 
   return availableGames;
@@ -165,7 +354,12 @@ export async function getGameById(id, selectedPlatforms = ['PlayStation 2', 'Pla
 
 export function clearGameCache() {
   gameCache.clear();
+  collaborativeCache.clear();
   cacheTimestamp = null;
+  localStorage.removeItem(STORAGE_KEY);
+  localStorage.removeItem(STORAGE_TIMESTAMP_KEY);
+  localStorage.removeItem(COLLABORATIVE_CACHE_KEY);
 }
 
-clearGameCache(); 
+// Clear cache on startup only if explicitly needed
+// Don't auto-clear on import 

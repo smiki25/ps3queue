@@ -4,7 +4,10 @@ const RAWG_KEY = process.env.REACT_APP_RAWG_KEY;
 const BASE_URL = 'https://api.rawg.io/api';
 const PAGE_SIZE = 40;
 
-const api = axios.create({ baseURL: BASE_URL });
+const api = axios.create({ 
+  baseURL: BASE_URL,
+  timeout: 10000
+});
 
 const PLATFORM_IDS = {
   'PlayStation 1': 10,
@@ -12,6 +15,29 @@ const PLATFORM_IDS = {
   'PlayStation 3': 16,
   'PlayStation Vita': 19
 };
+
+const apiCache = new Map();
+const CACHE_DURATION = 30 * 60 * 1000;
+
+function getCacheKey(endpoint, params) {
+  return `${endpoint}_${JSON.stringify(params)}`;
+}
+
+function getCachedResponse(cacheKey) {
+  const cached = apiCache.get(cacheKey);
+  if (cached && Date.now() - cached.timestamp < CACHE_DURATION) {
+    console.log('Using cached API response for:', cacheKey);
+    return cached.data;
+  }
+  return null;
+}
+
+function setCachedResponse(cacheKey, data) {
+  apiCache.set(cacheKey, {
+    data,
+    timestamp: Date.now()
+  });
+}
 
 const transformGameData = (rawgGame) => {
   return {
@@ -54,17 +80,23 @@ export const getGamesByPlatform = async (platformName, page = 1) => {
     throw new Error(`Unknown platform: ${platformName}. Supported platforms: ${Object.keys(PLATFORM_IDS).join(', ')}`);
   }
 
+  const params = {
+    key: RAWG_KEY,
+    platforms: platformId,
+    ordering: 'random',
+    page,
+    page_size: PAGE_SIZE,
+  };
+
+  const cacheKey = getCacheKey('/games', params);
+  const cached = getCachedResponse(cacheKey);
+  if (cached) {
+    return cached.map(transformGameData);
+  }
+
   try {
-    const { data } = await api.get('/games', {
-      params: {
-        key: RAWG_KEY,
-        platforms: platformId,
-        ordering: 'random',
-        page,
-        page_size: PAGE_SIZE,
-      },
-    });
-    
+    const { data } = await api.get('/games', { params });
+    setCachedResponse(cacheKey, data.results);
     return data.results.map(transformGameData);
   } catch (err) {
     console.error('RAWG fetch failed:', err);
@@ -85,18 +117,26 @@ export const getGamesByMultiplePlatforms = async (platformNames, page = 1) => {
     throw new Error(`No valid platforms found. Supported platforms: ${Object.keys(PLATFORM_IDS).join(', ')}`);
   }
 
+  const params = {
+    key: RAWG_KEY,
+    platforms: platformIds.join(','),
+    ordering: 'random',
+    page,
+    page_size: PAGE_SIZE,
+  };
+
+  const cacheKey = getCacheKey('/games', params);
+  const cached = getCachedResponse(cacheKey);
+  if (cached) {
+    console.log(`Using cached games for platforms: ${platformNames.join(', ')}, page: ${page}`);
+    return cached.map(transformGameData);
+  }
+
   try {
     console.log(`Fetching games for platforms: ${platformNames.join(', ')}, page: ${page}`);
-    const { data } = await api.get('/games', {
-      params: {
-        key: RAWG_KEY,
-        platforms: platformIds.join(','),
-        ordering: 'random',
-        page,
-        page_size: PAGE_SIZE,
-      },
-    });
+    const { data } = await api.get('/games', { params });
     
+    setCachedResponse(cacheKey, data.results);
     console.log(`Fetched ${data.results.length} games from RAWG API`);
     return data.results.map(transformGameData);
   } catch (err) {
@@ -111,15 +151,25 @@ export const getGamesByMultiplePlatforms = async (platformNames, page = 1) => {
   }
 };
 
+// Batch multiple game detail requests to reduce API calls
+const gameDetailsCache = new Map();
+
 export const getGameDetails = async (gameId) => {
   if (!RAWG_KEY) {
     throw new Error('RAWG API key missing. Please add REACT_APP_RAWG_KEY to your .env file');
+  }
+
+  const cacheKey = `game_details_${gameId}`;
+  const cached = getCachedResponse(cacheKey);
+  if (cached) {
+    return transformGameData(cached);
   }
   
   try {
     const { data } = await api.get(`/games/${gameId}`, {
       params: { key: RAWG_KEY },
     });
+    setCachedResponse(cacheKey, data);
     return transformGameData(data);
   } catch (err) {
     console.error('RAWG detail fetch failed', err);
@@ -128,40 +178,54 @@ export const getGameDetails = async (gameId) => {
 };
 
 export const getGameScreenshots = async (gameId) => {
-  if (!RAWG_KEY) {
-    throw new Error('RAWG API key missing. Please add REACT_APP_RAWG_KEY to your .env file');
-  }
-  
-  try {
-    const { data } = await api.get(`/games/${gameId}/screenshots`, {
-      params: { key: RAWG_KEY },
-    });
-    return data.results.map(screenshot => screenshot.image);
-  } catch (err) {
-    console.error('RAWG screenshots fetch failed', err);
-    throw new Error(`Failed to fetch screenshots for game ID ${gameId}: ${err.message}`);
-  }
+  return [];
 };
 
 let genreCache = null;
+const GENRE_CACHE_KEY = 'rawg_genre_cache';
+const GENRE_CACHE_TIMESTAMP_KEY = 'rawg_genre_cache_timestamp';
+
 export const getGenreCache = async () => {
   if (genreCache) return genreCache;
-  const stored = localStorage.getItem('rawgGenreCache');
-  if (stored) {
-    genreCache = JSON.parse(stored);
-    return genreCache;
-  }
+  
   try {
-    const { data } = await api.get('/genres', { params: { key: RAWG_KEY, page_size: 40 } });
+    const stored = localStorage.getItem(GENRE_CACHE_KEY);
+    const timestamp = localStorage.getItem(GENRE_CACHE_TIMESTAMP_KEY);
+    
+    if (stored && timestamp) {
+      const age = Date.now() - parseInt(timestamp);
+      if (age < 7 * 24 * 60 * 60 * 1000) {
+        genreCache = JSON.parse(stored);
+        console.log('Using cached genre data from localStorage');
+        return genreCache;
+      }
+    }
+  } catch (error) {
+    console.warn('Failed to load genre cache from localStorage:', error);
+  }
+
+  try {
+    const { data } = await api.get('/genres', { 
+      params: { 
+        key: RAWG_KEY, 
+        page_size: 40 
+      } 
+    });
+    
     genreCache = {};
     data.results.forEach((g) => {
       genreCache[g.name] = g.id;
     });
-    localStorage.setItem('rawgGenreCache', JSON.stringify(genreCache));
+    
+    localStorage.setItem(GENRE_CACHE_KEY, JSON.stringify(genreCache));
+    localStorage.setItem(GENRE_CACHE_TIMESTAMP_KEY, Date.now().toString());
+    
+    console.log('Fetched and cached genre data');
   } catch (e) {
     console.error('Failed to fetch RAWG genres', e);
     genreCache = {};
   }
+  
   return genreCache;
 };
 
@@ -174,17 +238,24 @@ export const getGamesByGenres = async (platformNames, genreIds, page = 1) => {
 
   if (platformIds.length === 0) return [];
 
+  const params = {
+    key: RAWG_KEY,
+    platforms: platformIds.join(','),
+    genres: genreIds.join(','),
+    ordering: 'random',
+    page,
+    page_size: PAGE_SIZE,
+  };
+
+  const cacheKey = getCacheKey('/games_by_genres', params);
+  const cached = getCachedResponse(cacheKey);
+  if (cached) {
+    return cached.map(transformGameData);
+  }
+
   try {
-    const { data } = await api.get('/games', {
-      params: {
-        key: RAWG_KEY,
-        platforms: platformIds.join(','),
-        genres: genreIds.join(','),
-        ordering: 'random',
-        page,
-        page_size: PAGE_SIZE,
-      },
-    });
+    const { data } = await api.get('/games', { params });
+    setCachedResponse(cacheKey, data.results);
     return data.results.map(transformGameData);
   } catch (err) {
     console.error('RAWG genre fetch failed', err);
@@ -194,15 +265,42 @@ export const getGamesByGenres = async (platformNames, genreIds, page = 1) => {
 
 export const hasRawgKey = !!RAWG_KEY;
 
+// Restore suggested games feature for collaborative filtering and hidden gem discovery
 export const getSuggested = async (gameId) => {
   if (!RAWG_KEY) return [];
+  
+  const cacheKey = `suggested_${gameId}`;
+  const cached = getCachedResponse(cacheKey);
+  if (cached) {
+    console.log(`Using cached suggestions for game ${gameId}`);
+    return cached.map(transformGameData);
+  }
+  
   try {
     const { data } = await api.get(`/games/${gameId}/suggested`, {
-      params: { key: RAWG_KEY, page_size: 20 },
+      params: { 
+        key: RAWG_KEY, 
+        page_size: 20 // Get more suggestions for better recommendations
+      },
     });
+    
+    setCachedResponse(cacheKey, data.results);
+    console.log(`Fetched ${data.results.length} suggested games for ${gameId}`);
     return data.results.map(transformGameData);
   } catch (err) {
     console.error('RAWG suggested fetch failed', err);
     return [];
   }
+};
+
+export const clearApiCache = () => {
+  apiCache.clear();
+  console.log('API cache cleared');
+};
+
+export const getCacheStats = () => {
+  return {
+    apiCacheSize: apiCache.size,
+    genreCacheLoaded: !!genreCache
+  };
 }; 

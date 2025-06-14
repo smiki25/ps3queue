@@ -6,7 +6,7 @@ const Carousel = ({ images = [] }) => {
   
   if (!images.length) {
     return (
-      <div className="w-full h-[500px] bg-gray-800 flex items-center justify-center text-gray-400">
+      <div className="w-full h-[250px] md:h-[400px] lg:h-[500px] bg-gray-800 flex items-center justify-center text-gray-400 rounded-lg">
         No images available
       </div>
     );
@@ -30,7 +30,7 @@ const Carousel = ({ images = [] }) => {
 
   return (
     <div className="w-full">
-      <div className="relative w-full h-[500px] bg-black overflow-hidden">
+      <div className="relative w-full h-[250px] md:h-[400px] lg:h-[500px] bg-black overflow-hidden rounded-lg">
         <img
           src={images[activeIndex]}
           alt={`Screenshot ${activeIndex + 1}`}
@@ -44,29 +44,37 @@ const Carousel = ({ images = [] }) => {
           <>
             <button
               onClick={goToPrevious}
-              className="absolute left-4 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white p-2 rounded transition-colors"
+              className="absolute left-2 md:left-4 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/70 active:bg-black/80 text-white p-2 md:p-3 rounded-full transition-colors touch-manipulation"
               aria-label="Previous image"
             >
-              <ChevronLeftIcon className="h-6 w-6" />
+              <ChevronLeftIcon className="h-5 w-5 md:h-6 md:w-6" />
             </button>
             <button
               onClick={goToNext}
-              className="absolute right-4 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white p-2 rounded transition-colors"
+              className="absolute right-2 md:right-4 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/70 active:bg-black/80 text-white p-2 md:p-3 rounded-full transition-colors touch-manipulation"
               aria-label="Next image"
             >
-              <ChevronRightIcon className="h-6 w-6" />
+              <ChevronRightIcon className="h-5 w-5 md:h-6 md:w-6" />
             </button>
           </>
         )}
+
+        {/* Image counter for mobile */}
+        {images.length > 1 && (
+          <div className="absolute bottom-2 right-2 bg-black/70 text-white px-2 py-1 rounded text-xs md:text-sm">
+            {activeIndex + 1} / {images.length}
+          </div>
+        )}
       </div>
 
+      {/* Thumbnail navigation - hidden on mobile, shown on larger screens */}
       {images.length > 1 && (
-        <div className="flex justify-center gap-2 mt-4 overflow-x-auto pb-2">
+        <div className="hidden md:flex justify-center gap-2 mt-4 overflow-x-auto pb-2">
           {images.map((image, index) => (
             <button
               key={index}
               onClick={() => goToSlide(index)}
-              className={`flex-shrink-0 w-20 h-14 rounded overflow-hidden border-2 transition-colors ${
+              className={`flex-shrink-0 w-16 h-12 lg:w-20 lg:h-14 rounded overflow-hidden border-2 transition-colors touch-manipulation ${
                 index === activeIndex 
                   ? 'border-[#480e0e]' 
                   : 'border-transparent hover:border-gray-400'
@@ -81,6 +89,24 @@ const Carousel = ({ images = [] }) => {
                 }}
               />
             </button>
+          ))}
+        </div>
+      )}
+
+      {/* Dot indicators for mobile */}
+      {images.length > 1 && (
+        <div className="flex md:hidden justify-center gap-2 mt-3">
+          {images.map((_, index) => (
+            <button
+              key={index}
+              onClick={() => goToSlide(index)}
+              className={`w-2 h-2 rounded-full transition-colors touch-manipulation ${
+                index === activeIndex 
+                  ? 'bg-[#480e0e]' 
+                  : 'bg-gray-400'
+              }`}
+              aria-label={`Go to image ${index + 1}`}
+            />
           ))}
         </div>
       )}
