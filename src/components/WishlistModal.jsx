@@ -4,7 +4,7 @@ import { XMarkIcon } from '@heroicons/react/24/solid';
 import { useGame } from '../context/GameContext';
 
 const WishlistModal = ({ isOpen, onClose }) => {
-  const { wishlist, removeFromWishlist, getGameById } = useGame();
+  const { wishlist, removeFromWishlist, getGameById, resetUserData } = useGame();
   const [wishlistGames, setWishlistGames] = useState([]);
   const [loading, setLoading] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
@@ -58,6 +58,14 @@ const WishlistModal = ({ isOpen, onClose }) => {
     setWishlistGames(prev => prev.filter(game => game.id !== gameId));
   };
 
+  const handleReset = () => {
+    if (window.confirm('Are you sure you want to reset all your preferences and data?')) {
+      resetUserData();
+      onClose();
+      window.location.reload();
+    }
+  };
+
   return (
     <AnimatePresence>
       {isOpen && (
@@ -73,7 +81,7 @@ const WishlistModal = ({ isOpen, onClose }) => {
             animate={{ scale: 1, opacity: 1 }}
             exit={{ scale: 0.9, opacity: 0 }}
             transition={{ type: 'spring', stiffness: 300, damping: 25 }}
-            className="bg-[#2b2b2b] w-full max-w-4xl max-h-[90vh] md:max-h-[80vh] rounded-lg overflow-hidden"
+            className="bg-[#302D2D] w-full max-w-4xl max-h-[90vh] md:max-h-[80vh] rounded-lg overflow-hidden"
             onClick={e => e.stopPropagation()}
           >
             <div className="bg-[#480e0e] p-4 md:p-6 flex justify-between items-center">
@@ -85,6 +93,15 @@ const WishlistModal = ({ isOpen, onClose }) => {
                 className="text-white hover:text-gray-300 active:text-gray-300 transition-colors touch-manipulation p-1"
               >
                 <XMarkIcon className="h-6 w-6 md:h-8 md:w-8" />
+              </button>
+            </div>
+
+            <div className="bg-[#480e0e] px-4 md:px-6 pb-4 flex justify-center">
+              <button
+                onClick={handleReset}
+                className="text-red-400 hover:text-red-300 active:text-red-300 transition-colors font-voltaire text-sm md:text-base"
+              >
+                Reset All Data
               </button>
             </div>
 
@@ -141,12 +158,15 @@ const WishlistModal = ({ isOpen, onClose }) => {
                       </div>
 
                       {game.rating && (
-                        <div className={`w-6 h-6 md:w-8 md:h-8 rounded-full flex items-center justify-center text-black font-bold text-xs md:text-sm mr-2 md:mr-4 flex-shrink-0 ${
-                          game.rating === 'S' ? 'bg-yellow-400' :
-                          game.rating === 'A' ? 'bg-green-400' :
-                          game.rating === 'B' ? 'bg-blue-400' :
-                          game.rating === 'C' ? 'bg-orange-400' :
-                          'bg-red-400'
+                        <div className={`w-6 h-6 md:w-8 md:h-8 rounded-lg flex items-center justify-center font-bold text-xs md:text-sm mr-2 md:mr-4 flex-shrink-0 ${
+                          game.rating === 'S' ? 'bg-purple-700 text-white' :
+                          game.rating === 'A' ? 'bg-green-600 text-white' :
+                          game.rating === 'B' ? 'bg-yellow-500 text-black' :
+                          game.rating === 'C' ? 'bg-orange-600 text-white' :
+                          game.rating === 'D' ? 'bg-red-600 text-white' :
+                          game.rating === 'E' ? 'bg-red-800 text-white' :
+                          game.rating === 'F' ? 'bg-gray-900 text-white' :
+                          'bg-blue-400 text-white'
                         }`}>
                           {game.rating}
                         </div>

@@ -129,8 +129,8 @@ export const GameProvider = ({ children }) => {
     }
   };
 
-  const addToWishlist = (gameId) => {
-    recordInteraction(gameId, 'wishlisted');
+  const addToWishlist = async (gameId) => {
+    await recordInteraction(gameId, 'wishlisted');
   };
 
   const removeFromWishlist = (gameId) => {

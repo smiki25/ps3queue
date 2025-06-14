@@ -124,7 +124,7 @@ const Queue = ({ selectedPlatforms = [] }) => {
 
   if (selectedPlatforms.length === 0) {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center bg-[#2b2b2b] text-white px-4">
+      <div className="min-h-screen flex flex-col items-center justify-center bg-[#302D2D] text-white px-4">
         <div className="text-center">
           <h2 className="text-2xl md:text-3xl font-voltaire mb-4">No Platforms Selected</h2>
           <p className="text-lg md:text-xl text-gray-300">
@@ -137,7 +137,7 @@ const Queue = ({ selectedPlatforms = [] }) => {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center bg-[#2b2b2b] text-white px-4">
+      <div className="min-h-screen flex flex-col items-center justify-center bg-[#302D2D] text-white px-4">
         <div className="w-16 h-16 border-4 border-t-white border-gray-600 rounded-full animate-spin mb-4"></div>
         <p className="text-lg md:text-xl font-voltaire">Loading Games...</p>
         <p className="text-sm text-gray-400 mt-2 text-center">Fetching from RAWG API...</p>
@@ -149,7 +149,7 @@ const Queue = ({ selectedPlatforms = [] }) => {
     const isApiKeyError = error.includes('API key');
     
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center bg-[#2b2b2b] text-white px-4">
+      <div className="min-h-screen flex flex-col items-center justify-center bg-[#302D2D] text-white px-4">
         <div className="text-center max-w-2xl">
           <h2 className="text-2xl md:text-3xl font-voltaire mb-4 text-red-400">
             {isApiKeyError ? 'API Key Required' : 'Error Loading Games'}
@@ -183,7 +183,7 @@ const Queue = ({ selectedPlatforms = [] }) => {
 
   if (!displayedGame) {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center bg-[#2b2b2b] text-white px-4">
+      <div className="min-h-screen flex flex-col items-center justify-center bg-[#302D2D] text-white px-4">
         <div className="text-center">
           <h2 className="text-2xl md:text-3xl font-voltaire mb-4">No More Games!</h2>
           <p className="text-lg md:text-xl text-gray-300 mb-6">
@@ -206,9 +206,8 @@ const Queue = ({ selectedPlatforms = [] }) => {
   }
 
   return (
-    <div className="min-h-screen bg-[#2b2b2b] flex flex-col">
-      <div className="flex-1 flex flex-col items-center justify-start p-4 md:p-6 relative overflow-y-auto">
-        <div className="w-full max-w-4xl lg:max-w-7xl mb-4 md:mb-6 flex-shrink-0">
+    <div className="flex-1 flex flex-col items-center justify-start p-2 sm:p-4 md:p-6 relative overflow-y-auto bg-[#302D2D]">
+        <div className="w-full max-w-4xl lg:max-w-7xl mb-3 sm:mb-4 md:mb-6 flex-shrink-0">
           <AnimatePresence mode="wait">
             <motion.div
               key={`game-${displayedGame.id}`}
@@ -222,12 +221,12 @@ const Queue = ({ selectedPlatforms = [] }) => {
           </AnimatePresence>
         </div>
 
-        {/* Mobile: Stack buttons vertically, Desktop: Horizontal */}
-        <div className="w-full max-w-4xl lg:max-w-7xl flex flex-col md:flex-row justify-between gap-3 md:gap-4 flex-shrink-0">
+        {/* Mobile-optimized buttons */}
+        <div className="w-full max-w-4xl lg:max-w-7xl flex flex-col sm:flex-row justify-between gap-2 sm:gap-3 md:gap-4 flex-shrink-0 px-2 sm:px-0">
           <button
             onClick={() => handleAction('rejected')}
             disabled={isProcessing}
-            className={`w-full md:flex-1 bg-[#480e0e] hover:bg-[#5a1010] active:bg-[#5a1010] text-white font-voltaire font-bold py-4 md:py-6 text-xl md:text-3xl transition-colors rounded-lg touch-manipulation ${
+            className={`w-full sm:flex-1 bg-[#480e0e] hover:bg-[#5a1010] active:bg-[#5a1010] text-white font-voltaire font-bold py-3 sm:py-4 md:py-6 text-lg sm:text-xl md:text-3xl transition-colors rounded-lg touch-manipulation min-h-[48px] ${
               isProcessing ? 'opacity-50 cursor-not-allowed' : ''
             }`}
           >
@@ -237,7 +236,7 @@ const Queue = ({ selectedPlatforms = [] }) => {
           <button
             onClick={handleWishlist}
             disabled={isProcessing}
-            className={`w-full md:flex-1 font-voltaire font-bold py-4 md:py-6 text-xl md:text-3xl transition-colors rounded-lg touch-manipulation ${
+            className={`w-full sm:flex-1 font-voltaire font-bold py-3 sm:py-4 md:py-6 text-lg sm:text-xl md:text-3xl transition-colors rounded-lg touch-manipulation min-h-[48px] ${
               isProcessing ? 'opacity-50 cursor-not-allowed' : ''
             } ${
               isInWishlist(displayedGame.id)
@@ -245,13 +244,13 @@ const Queue = ({ selectedPlatforms = [] }) => {
                 : 'bg-white hover:bg-gray-200 active:bg-gray-200 text-black'
             }`}
           >
-            {isInWishlist(displayedGame.id) ? 'In Wishlist' : 'Add to wishlist'}
+            {isInWishlist(displayedGame.id) ? '✓ In Wishlist' : 'Add to wishlist'}
           </button>
           
           <button
             onClick={() => handleAction('skipped')}
             disabled={isProcessing}
-            className={`w-full md:flex-1 bg-[#480e0e] hover:bg-[#5a1010] active:bg-[#5a1010] text-white font-voltaire font-bold py-4 md:py-6 text-xl md:text-3xl transition-colors rounded-lg touch-manipulation ${
+            className={`w-full sm:flex-1 bg-[#480e0e] hover:bg-[#5a1010] active:bg-[#5a1010] text-white font-voltaire font-bold py-3 sm:py-4 md:py-6 text-lg sm:text-xl md:text-3xl transition-colors rounded-lg touch-manipulation min-h-[48px] ${
               isProcessing ? 'opacity-50 cursor-not-allowed' : ''
             }`}
           >
@@ -264,7 +263,7 @@ const Queue = ({ selectedPlatforms = [] }) => {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="absolute inset-0 flex items-center justify-center bg-[#2b2b2b] z-10"
+            className="absolute inset-0 flex items-center justify-center bg-[#302D2D] z-10"
           >
             <div className="bg-[#1a1a1a] px-8 md:px-12 py-6 md:py-8 rounded-xl flex flex-col items-center space-y-4 border-2 border-[#480e0e] shadow-2xl mx-4">
               <div className="w-12 h-12 border-4 border-t-white border-[#480e0e] rounded-full animate-spin"></div>
@@ -272,7 +271,6 @@ const Queue = ({ selectedPlatforms = [] }) => {
             </div>
           </motion.div>
         )}
-      </div>
     </div>
   );
 };

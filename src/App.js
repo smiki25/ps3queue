@@ -10,7 +10,7 @@ function App() {
   return (
     <GameProvider>
       <FavoritesProvider>
-        <div className="font-voltaire bg-[#2b2b2b] min-h-screen text-white">
+        <div className="font-voltaire bg-[#302D2D] min-h-screen text-white">
           <Routes>
             <Route path="/" element={<HomePage />} />
             <Route path="/queue" element={<QueuePage />} />

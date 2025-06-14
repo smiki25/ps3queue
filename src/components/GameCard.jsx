@@ -43,26 +43,26 @@ const GameCard = ({ game }) => {
     : description;
 
   return (
-    <div className="w-full flex flex-col lg:flex-row bg-[#2b2b2b] min-h-[400px] md:min-h-[500px] rounded-lg overflow-hidden">
+    <div className="w-full flex flex-col lg:flex-row bg-[#302D2D] min-h-[350px] sm:min-h-[400px] md:min-h-[500px] rounded-lg overflow-hidden">
       {/* Image Section */}
-      <div className="w-full lg:w-[60%] lg:pr-6 mb-4 lg:mb-0">
+      <div className="w-full lg:w-[60%] lg:pr-6 mb-3 sm:mb-4 lg:mb-0">
         <Carousel images={images} />
       </div>
 
       {/* Content Section */}
-      <div className="w-full lg:w-[40%] text-white flex flex-col px-4 lg:px-0">
+      <div className="w-full lg:w-[40%] text-white flex flex-col px-3 sm:px-4 lg:px-0">
         {/* Title */}
-        <div className="bg-[#480e0e] p-3 md:p-4 mb-3 md:mb-4 rounded-lg lg:rounded-none">
-          <h2 className="text-xl md:text-2xl lg:text-3xl font-voltaire font-bold uppercase leading-tight">
+        <div className="bg-[#480e0e] p-2 sm:p-3 md:p-4 mb-2 sm:mb-3 md:mb-4 rounded-lg lg:rounded-none">
+          <h2 className="text-lg sm:text-xl md:text-2xl lg:text-3xl font-voltaire font-bold uppercase leading-tight">
             {title}
           </h2>
         </div>
 
         {/* Main Content */}
-        <div className="bg-[#480e0e] p-3 md:p-4 flex-1 flex flex-col justify-between rounded-lg lg:rounded-none">
-          <div className="space-y-3">
+        <div className="bg-[#480e0e] p-2 sm:p-3 md:p-4 flex-1 flex flex-col justify-between rounded-lg lg:rounded-none">
+          <div className="space-y-2 sm:space-y-3">
             {/* Game Info */}
-            <div className="space-y-2 text-sm md:text-base lg:text-lg">
+            <div className="space-y-1 sm:space-y-2 text-xs sm:text-sm md:text-base lg:text-lg">
               {releaseDate && (
                 <p><span className="text-gray-300">Release Date:</span> {releaseDate}</p>
               )}

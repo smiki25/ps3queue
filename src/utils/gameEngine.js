@@ -94,12 +94,11 @@ export async function getCollaborativeRecommendations(likedGameIds, allGames) {
     try {
       const suggestions = await getSuggested(gameId);
       
-      // Filter to only PS2/PS3 games and hidden gems (lower rating/less known)
+      // Filter to only PS2/PS3 games (removed rating filter to include all weird games)
       const filteredSuggestions = suggestions.filter(game => {
         const platform = game.platform || '';
         const isPS2PS3 = platform.includes('PlayStation 2') || platform.includes('PlayStation 3');
-        const isHiddenGem = !game.rating || game.rating < 4.0; // Focus on lesser-known games
-        return isPS2PS3 && isHiddenGem;
+        return isPS2PS3; // Include all games regardless of rating
       });
       
       // Cache the suggestions
@@ -182,27 +181,35 @@ export function getGameScore(game, preferenceVector = {}, likedGames = [], colla
     collaborativeScore = collaborativeMatch.score * 0.4; // Strong weight for collaborative filtering
   }
 
-  // Hidden gem bonus - favor lesser-known games
+  // Weird game bonus - give slight bonus to unusual games (both high and low rated)
   const rating = parseFloat(game.rating) || 0;
-  if (rating > 0 && rating < 4.0) {
-    hiddenGemBonus = (4.0 - rating) * 0.2; // Higher bonus for lower-rated (potentially hidden) gems
+  if (rating > 0) {
+    // Give bonus to both very low rated (weird/cult) and very high rated (acclaimed weird) games
+    if (rating < 2.5 || rating > 4.5) {
+      hiddenGemBonus = 0.3; // Bonus for potentially weird/unusual games
+    } else if (rating < 3.5) {
+      hiddenGemBonus = 0.1; // Small bonus for moderately low-rated games
+    }
   }
 
   // Bonus for older games (PS2/PS3 era focus)
   const gameYear = parseInt(game.releaseDate) || 2000;
   const eraBonus = (gameYear >= 2000 && gameYear <= 2013) ? 0.3 : 0;
 
-  const explorationNoise = Math.random() * 0.2; // Reduced to give more weight to other factors
+  // Much higher randomization for discovering weird games
+  const explorationNoise = Math.random() * 2.0; // Massive randomization boost
+  const chaosBonus = Math.random() * 1.5; // Additional chaos factor
 
   const finalScore =
-    collaborativeScore * 0.35 +        // Collaborative filtering (most important for discovery)
-    contentSimilarity * 0.25 +         // Content similarity
-    affinity * 0.15 +                  // User preferences
-    hiddenGemBonus * 0.1 +             // Hidden gem bonus
-    eraBonus * 0.05 +                  // Era bonus
-    developerAffinity * 0.05 +         // Developer affinity
-    platformAffinity * 0.03 +          // Platform affinity
-    explorationNoise * 0.02;           // Small randomization
+    explorationNoise * 0.4 +           // High randomization (most important for variety)
+    chaosBonus * 0.25 +                // Additional chaos for weird discoveries
+    hiddenGemBonus * 0.15 +            // Weird game bonus (both high and low rated)
+    collaborativeScore * 0.08 +        // Reduced collaborative filtering
+    contentSimilarity * 0.05 +         // Reduced content similarity
+    affinity * 0.03 +                  // Reduced user preferences
+    eraBonus * 0.02 +                  // Era bonus
+    developerAffinity * 0.01 +         // Developer affinity
+    platformAffinity * 0.01;           // Platform affinity
 
   return Math.max(0, finalScore);
 }
@@ -225,8 +232,8 @@ async function fetchGamesData(selectedPlatforms, forceRefresh = false) {
   try {
     console.log('Fetching games from RAWG API...');
     
-    // Start with fewer pages initially, expand as needed
-    const initialPages = 3; // Reduced from 5 to 3
+    // Fetch more pages for better variety and weird game discovery
+    const initialPages = 8; // Increased for more diverse game pool
     const promises = [];
     
     for (let page = 1; page <= initialPages; page++) {
@@ -278,7 +285,7 @@ export async function expandGameCache(selectedPlatforms, currentGameCount) {
   
   try {
     console.log('Expanding game cache...');
-    const nextPages = [4, 5]; // Fetch additional pages
+    const nextPages = [9, 10, 11, 12]; // Fetch more additional pages for variety
     const promises = nextPages.map(page => 
       getGamesByMultiplePlatforms(selectedPlatforms, page)
     );
@@ -317,12 +324,15 @@ export async function getFilteredQueue(selectedPlatforms, userState = {}) {
     !rejectedGameIds.has(game.id)
   );
   
+  // Shuffle the games first for maximum randomness
+  availableGames = availableGames.sort(() => Math.random() - 0.5);
+  
   if (Object.keys(preferenceVector).length > 0 || likedGames.length > 0) {
     const likedGameObjects = likedGames.map(id => 
       allGames.find(g => g.id === id)
     ).filter(Boolean);
 
-    // Get collaborative recommendations for hidden gem discovery
+    // Get collaborative recommendations for weird game discovery
     const collaborativeRecommendations = await getCollaborativeRecommendations(likedGames, allGames);
     console.log(`Found ${collaborativeRecommendations.length} collaborative recommendations`);
 
@@ -330,14 +340,21 @@ export async function getFilteredQueue(selectedPlatforms, userState = {}) {
       ...game,
       score: getGameScore(game, preferenceVector, likedGameObjects, collaborativeRecommendations)
     })).sort((a, b) => b.score - a.score);
+    
+    // Add additional shuffle to top 50% to prevent same order
+    const topHalf = Math.floor(availableGames.length * 0.5);
+    const topGames = availableGames.slice(0, topHalf).sort(() => Math.random() - 0.5);
+    const bottomGames = availableGames.slice(topHalf);
+    availableGames = [...topGames, ...bottomGames];
   } else {
-    // For new users, prioritize hidden gems and lesser-known titles
+    // For new users, use heavy randomization with light scoring
     availableGames = availableGames
       .map(game => ({
         ...game,
         score: getGameScore(game, {}, [], [])
       }))
-      .sort((a, b) => b.score - a.score);
+      .sort((a, b) => b.score - a.score)
+      .sort(() => Math.random() - 0.5); // Additional shuffle for new users
   }
 
   return availableGames;

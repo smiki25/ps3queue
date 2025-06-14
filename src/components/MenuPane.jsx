@@ -18,7 +18,7 @@ const MenuPane = ({ selectedConsoles, onConsoleChange, onStartQueue }) => {
     <div className="w-80 bg-[#1a1a1a] p-6 flex flex-col h-full">
       <div className="mb-8">
         <h2 className="text-white text-xl font-voltaire mb-4">Preferred consoles</h2>
-        <div className="space-y-3 bg-[#2b2b2b] p-4 rounded">
+        <div className="space-y-3 bg-[#302D2D] p-4 rounded">
           {consoles.map((console) => (
             <label 
               key={console.id}
