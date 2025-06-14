@@ -151,9 +151,6 @@ export const getGamesByMultiplePlatforms = async (platformNames, page = 1) => {
   }
 };
 
-// Batch multiple game detail requests to reduce API calls
-const gameDetailsCache = new Map();
-
 export const getGameDetails = async (gameId) => {
   if (!RAWG_KEY) {
     throw new Error('RAWG API key missing. Please add REACT_APP_RAWG_KEY to your .env file');

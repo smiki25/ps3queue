@@ -1,9 +1,8 @@
 import React from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 
 const Header = ({ onWishlistClick }) => {
   const navigate = useNavigate();
-  const location = useLocation();
 
   return (
     <header className="h-16 bg-[#480e0e] text-white flex items-center justify-between px-3 sm:px-4 md:px-6">
