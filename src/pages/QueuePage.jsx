@@ -22,7 +22,7 @@ const QueuePage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#2b2b2b] flex flex-col">
+    <div className="min-h-screen bg-[#302D2D] flex flex-col">
       <Header onWishlistClick={() => setShowWishlist(true)} />
       
       <div className="bg-[#1a1a1a] px-6 py-3 flex justify-between items-center">

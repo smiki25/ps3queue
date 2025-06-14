@@ -7,7 +7,7 @@ import QueuePage from './pages/QueuePage';
 function App() {
   return (
     <GameProvider>
-      <div className="font-voltaire bg-[#2b2b2b] min-h-screen text-white">
+      <div className="font-voltaire bg-[#302D2D] min-h-screen text-white">
         <Routes>
           <Route path="/" element={<HomePage />} />
           <Route path="/queue" element={<QueuePage />} />

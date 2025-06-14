@@ -113,7 +113,7 @@ const Queue = ({ selectedPlatforms = [] }) => {
 
   if (selectedPlatforms.length === 0) {
     return (
-      <div className="h-[calc(100vh-64px)] flex flex-col items-center justify-center bg-[#2b2b2b] text-white">
+      <div className="h-[calc(100vh-64px)] flex flex-col items-center justify-center bg-[#302D2D] text-white">
         <div className="text-center">
           <h2 className="text-3xl font-voltaire mb-4">No Platforms Selected</h2>
           <p className="text-xl text-gray-300">
@@ -126,7 +126,7 @@ const Queue = ({ selectedPlatforms = [] }) => {
 
   if (isLoading) {
     return (
-      <div className="h-[calc(100vh-64px)] flex flex-col items-center justify-center bg-[#2b2b2b] text-white">
+      <div className="h-[calc(100vh-64px)] flex flex-col items-center justify-center bg-[#302D2D] text-white">
         <div className="w-16 h-16 border-4 border-t-white border-gray-600 rounded-full animate-spin mb-4"></div>
         <p className="text-xl font-voltaire">Loading Games...</p>
         <p className="text-sm text-gray-400 mt-2">Fetching from RAWG API...</p>
@@ -138,7 +138,7 @@ const Queue = ({ selectedPlatforms = [] }) => {
     const isApiKeyError = error.includes('API key');
     
     return (
-      <div className="h-[calc(100vh-64px)] flex flex-col items-center justify-center bg-[#2b2b2b] text-white">
+      <div className="h-[calc(100vh-64px)] flex flex-col items-center justify-center bg-[#302D2D] text-white">
         <div className="text-center max-w-2xl px-6">
           <h2 className="text-3xl font-voltaire mb-4 text-red-400">
             {isApiKeyError ? 'API Key Required' : 'Error Loading Games'}
@@ -172,7 +172,7 @@ const Queue = ({ selectedPlatforms = [] }) => {
 
   if (!displayedGame) {
     return (
-      <div className="h-[calc(100vh-64px)] flex flex-col items-center justify-center bg-[#2b2b2b] text-white">
+      <div className="h-[calc(100vh-64px)] flex flex-col items-center justify-center bg-[#302D2D] text-white">
         <div className="text-center">
           <h2 className="text-3xl font-voltaire mb-4">No More Games!</h2>
           <p className="text-xl text-gray-300 mb-6">
@@ -195,7 +195,7 @@ const Queue = ({ selectedPlatforms = [] }) => {
   }
 
   return (
-    <div className="h-[calc(100vh-64px)] bg-[#2b2b2b] flex flex-col">
+    <div className="h-[calc(100vh-64px)] bg-[#302D2D] flex flex-col">
       <div className="flex-1 flex flex-col items-center justify-start p-6 relative overflow-y-auto">
         <div className="w-full max-w-7xl mb-6 flex-shrink-0">
           <AnimatePresence mode="wait">
@@ -252,7 +252,7 @@ const Queue = ({ selectedPlatforms = [] }) => {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="absolute inset-0 flex items-center justify-center bg-[#2b2b2b] z-10"
+            className="absolute inset-0 flex items-center justify-center bg-[#302D2D] z-10"
           >
             <div className="bg-[#1a1a1a] px-12 py-8 rounded-xl flex flex-col items-center space-y-4 border-2 border-[#480e0e] shadow-2xl">
               <div className="w-12 h-12 border-4 border-t-white border-[#480e0e] rounded-full animate-spin"></div>

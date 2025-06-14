@@ -43,7 +43,7 @@ const GameCard = ({ game }) => {
     : description;
 
   return (
-    <div className="w-full flex bg-[#2b2b2b] min-h-[500px]">
+    <div className="w-full flex bg-[#302D2D] min-h-[500px]">
       <div className="w-[60%] pr-6">
         <Carousel images={images} />
       </div>

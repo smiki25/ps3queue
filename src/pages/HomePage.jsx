@@ -29,7 +29,7 @@ const HomePage = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-[#2b2b2b] flex flex-col">
+    <div className="min-h-screen bg-[#302D2D] flex flex-col">
       <Header onWishlistClick={() => setShowWishlist(true)} />
       
       <div className="flex-1 flex items-center justify-center p-8">

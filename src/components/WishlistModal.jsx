@@ -60,7 +60,7 @@ const WishlistModal = ({ isOpen, onClose }) => {
             animate={{ scale: 1, opacity: 1 }}
             exit={{ scale: 0.9, opacity: 0 }}
             transition={{ type: 'spring', stiffness: 300, damping: 25 }}
-            className="bg-[#2b2b2b] w-full max-w-4xl max-h-[80vh] rounded-lg overflow-hidden"
+            className="bg-[#302D2D] w-full max-w-4xl max-h-[80vh] rounded-lg overflow-hidden"
             onClick={e => e.stopPropagation()}
           >
             <div className="bg-[#480e0e] p-6 flex justify-between items-center">
