@@ -7,6 +7,7 @@ const WishlistModal = ({ isOpen, onClose }) => {
   const { wishlist, removeFromWishlist, getGameById } = useGame();
   const [wishlistGames, setWishlistGames] = useState([]);
   const [loading, setLoading] = useState(false);
+  const { resetUserData } = useGame();
 
   useEffect(() => {
     const loadWishlistGames = async () => {
@@ -45,6 +46,13 @@ const WishlistModal = ({ isOpen, onClose }) => {
     setWishlistGames(prev => prev.filter(game => game.id !== gameId));
   };
 
+  const handleReset = () => {
+    if (window.confirm('Are you sure you want to reset all your preferences and data?')) {
+      resetUserData();
+      window.location.reload();
+    }
+  };
+
   return (
     <AnimatePresence>
       {isOpen && (
@@ -70,6 +78,15 @@ const WishlistModal = ({ isOpen, onClose }) => {
                 className="text-white hover:text-gray-300 transition-colors"
               >
                 <XMarkIcon className="h-8 w-8" />
+              </button>
+            </div>
+
+            <div className="mt-4 flex justify-center">
+              <button
+                onClick={handleReset}
+                className="text-red-400 hover:text-red-300 transition-colors font-voltaire"
+              >
+                Reset Data
               </button>
             </div>
 
